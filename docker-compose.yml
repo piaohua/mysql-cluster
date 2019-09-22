@@ -1,0 +1,121 @@
+version: '3'
+
+networks:
+    mysql_cluster_net:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+            - subnet: 172.16.38.0/24
+
+services:
+    management1:
+      container_name: "management1"
+      image: mysql/mysql-cluster:8.0.17
+      networks:
+          mysql_cluster_net:
+              ipv4_address: 172.16.38.102
+      volumes:
+          - ./cnf/mysql-cluster.cnf:/etc/mysql-cluster.cnf
+          - node1-data:/var/lib/mysql
+      expose:
+          - "1186"
+          - "2202"
+          - "3306"
+          - "33060"
+      command: 
+          - ndb_mgmd
+
+    ndb1:
+      container_name: "ndb1"
+      image: mysql/mysql-cluster:8.0.17
+      networks:
+          mysql_cluster_net:
+              ipv4_address: 172.16.38.103
+      volumes:
+          - ./cnf/my.cnf:/etc/my.cnf
+          - node2-data:/var/lib/mysql
+      expose:
+          - "1186"
+          - "2202"
+          - "3306"
+          - "33060"
+      command: 
+          - ndbd
+      depends_on:
+          - management1
+
+    ndb2:
+      container_name: "ndb2"
+      image: mysql/mysql-cluster:8.0.17
+      networks:
+          mysql_cluster_net:
+              ipv4_address: 172.16.38.104
+      volumes:
+          - ./cnf/my.cnf:/etc/my.cnf
+          - node3-data:/var/lib/mysql
+      expose:
+          - "1186"
+          - "2202"
+          - "3306"
+          - "33060"
+      command: 
+          - ndbd
+      depends_on:
+          - management1
+
+    mysql1:
+      container_name: "mysql1"
+      image: mysql/mysql-cluster:8.0.17
+      networks:
+          mysql_cluster_net:
+              ipv4_address: 172.16.38.115
+      volumes:
+          - ./cnf/my.cnf:/etc/my.cnf
+          - node4-data:/var/lib/mysql
+          - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+      expose:
+          - "1186"
+          - "2202"
+          - "3306"
+          - "33060"
+      environment:
+          - MYSQL_ROOT_PASSWORD=000000
+      command: 
+          - mysqld
+      depends_on:
+          - management1
+          - ndb1
+          - ndb2
+
+    mysql2:
+      container_name: "mysql2"
+      image: mysql/mysql-cluster:8.0.17
+      networks:
+          mysql_cluster_net:
+              ipv4_address: 172.16.38.116
+      volumes:
+          - ./cnf/my.cnf:/etc/my.cnf
+          - node5-data:/var/lib/mysql
+          - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+      expose:
+          - "1186"
+          - "2202"
+          - "3306"
+          - "33060"
+      environment:
+          - MYSQL_ROOT_PASSWORD=000000
+      command: 
+          - mysqld
+      depends_on:
+          - management1
+          - ndb1
+          - ndb2
+          - mysql1
+
+volumes:
+    node1-data:
+    node2-data:
+    node3-data:
+    node4-data:
+    node5-data:

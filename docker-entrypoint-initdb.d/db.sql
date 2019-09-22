@@ -1,0 +1,13 @@
+CREATE DATABASE IF NOT EXISTS appdb;
+
+CREATE USER 'RoyBatty'@'%' IDENTIFIED BY 'RoyBatty2019';
+GRANT ALL PRIVILEGES ON appdb.* TO 'RoyBatty'@'%' WITH GRANT OPTION;
+GRANT CREATE USER ON *.* to 'RoyBatty'@'%';
+FLUSH PRIVILEGES;
+
+USE appdb;
+CREATE TABLE IF NOT EXISTS `test` (
+    `id` INT(11) NOT NULL,
+    `name` VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE=ndbcluster ;
